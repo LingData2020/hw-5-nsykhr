@@ -83,8 +83,8 @@ summary(preds)
 
 ### 2.1.2 
 Write down the equation for f2 using coefficients from the model (e.g. $y =  b + kx$)
-```{r 2.1.2}
-shva$pred_f2 = 1639.70215 - 0.42875*shva$f1
+```
+f2 = 1639.70215 - 0.42875*f1
 ```
 
 ### 2.1.3 
@@ -173,19 +173,28 @@ summary(d_caus)
 ### 3.1 
 We are going to test whether the association between `Aux` and other categorical variables (`Aux` ~ `CrSem`, `Aux` ~ `CeSem`, etc) is statistically significant. The assiciation with which variable should be analysed using Fisher's Exact Test and not using Pearson's Chi-squared Test? Is this association statistically significant?
 ```{r 3.1}
-
+chisq.test(d_caus$Aux, d_caus$CrSem)
+chisq.test(d_caus$Aux, d_caus$CeSem)
+chisq.test(d_caus$Aux, d_caus$CdEvSem)
+chisq.test(d_caus$Aux, d_caus$CeSynt)
+chisq.test(d_caus$Aux, d_caus$EPTrans)
+chisq.test(d_caus$Aux, d_caus$Country)
+chisq.test(d_caus$Aux, d_caus$Domain)
+fisher.test(d_caus$Aux, d_caus$CeSynt)
 ```
+We get a warning when trying to run Pearson's Chi-squared Test with Aux and CeSynt: therefore, we should use Fisher's Exact Test for those variables. The obtained p-value is very low, therefore, the association is statistically significant.
 
 ### 3.2. 
 Test the hypothesis that `Aux` and `EPTrans` are not independent with the help of Pearson's Chi-squared Test. 
 ```{r 3.2}
-
+Aux_EPTrans <- chisq.test(d_caus$Aux, d_caus$EPTrans)
+Aux_EPTrans
 ```
 
 ### 3.3 
 Provide expected frequencies for Pearson's Chi-squared Test of `Aux` and `EPTrans` variables.
 ```{r 3.3}
-
+obs <- Aux_EPTrans$observed
 ```
 
 ### 3.4. 
@@ -199,35 +208,39 @@ $$
 one can find *odds ratio* as $(a/c)/(b/d)$.
 
 ```{r 3.4}
-
-
+obs_or <- (obs[1, 1] / obs[2, 1]) / (obs[1, 2] / obs[2, 2])
+obs_or
 ```
 
 ### 3.4.1 
 Find odds ratio for expected frequencies of `Aux` and `EPTrans`
 
 ```{r 3.4.1}
-
+exp <- Aux_EPTrans$expected
+exp_or <- (exp[1, 1] / exp[2, 1]) / (exp[1, 2] / exp[2, 2])
+exp_or
 ```
 What can you say about odds ratio of expected frequencies for arbitrary data?
+Odds ratio of expected frequencies, if we accept the null hypothesis of independence, equals 1. In reality, we observe the odds ratio of 2.6, which means that the verb `doen` is used with intransitive verbs more often than with transitive.
 
 ### 3.5 
 Calculate effect size for this test using Cramer's V (phi).
 ```{r 3.5}
-
+library(lsr)
+cramersV(Aux_EPTrans$observed)
 ```
 
 ### 3.6. 
 Report the results of independence test using the following template:
 ```
-We have / have not found a significant association between variables ... and ... (p < 0.001).  The odds of ... were ... times higher / lower in (group ....) than in (group ....). Effect size is large / medium / small (Cramer's V = ....).
+We have found a significant association between variables Aux and EPTrans (p < 0.001).  The odds of `doen` were $2.606162$ times higher in intransitive verbs than in transitive verbs. Effect size is small (Cramer's V = 0.1691587).
 ```
 
 ### 3.7 
 Visualize the distribution using mosaic plot.
 Use `mosaic()` function from `vcd` library.
 ```{r 3.7}
-
+mosaic(~ Aux + EPTrans, data=d_caus, shade=TRUE, legend=TRUE)
 ```
 
 Below is an example of how to use mosaic() with three variables.
@@ -238,11 +251,11 @@ Below is an example of how to use mosaic() with three variables.
 ### 3.8 
 Why is it not recommended to run multiple Chisq tests of independence on different variables within your dataset whithout adjusting for the multiplicity? (i.e. just testing all the pairs of variables one by one)  
 ```
-
+Because of error accumulation. If we run the same test on different variable pairs separately, the overall statistical error inherent to the Chi-squared test will grow with every iteration.
 ```
 
 ### 3.9 
 Provide a short text (300 words) describing the hypothesis of this study and the results of your analysis.
-```{r 3.9}
-
+```
+The study focuses on two Dutch causative verbs, `doen` and `laten` (roughly corresponding to the English `do` and `let`). The null hypothesis is that they are used interchangeably, independently of the context. To test this hypothesis, an annotated corpus is used. A set of several features hypothesized to affect the choice of verb was used. These are the features that turned out to be statistically significantly (at significance level of 0.001) associated with the choice of verb: CrSem (the semantic class of the Causer), CdEvSem (the semantic domain of the caused event expressed by the Effected Predicate), EPTrans (transitivity or intransitivity of the effected predicate), Country (Belgium or Netherlands), Domain, and CeSynt ( the syntactic status of the Causee). The effect of the variable EPTrans was studied in more detail: as it turns out, the verb `doen` is used 2.6 times more often with intransitive verbs than with transitive ones. Overall, the null hypothesis of independence was rejected.
 ```
